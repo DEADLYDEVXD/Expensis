@@ -1,0 +1,1214 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="dashApp">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Dashboard — FinWise</title>
+    <link rel="icon" type="image/svg+xml"
+        href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop stop-color='%237c5cff'/%3E%3Cstop offset='1' stop-color='%2322d3ee'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='16' fill='url(%23g)'/%3E%3Cpath d='M19 21h25M19 32h25M19 43h17' stroke='white' stroke-width='5' stroke-linecap='round'/%3E%3Ccircle cx='46' cy='43' r='7' fill='%2322c55e' stroke='white' stroke-width='3'/%3E%3C/svg%3E" />
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0
+        }
+
+        :root {
+            --bg: #f5f6fa;
+            --panel: #fff;
+            --text: #0f172a;
+            --muted: #64748b;
+            --border: #e5e7eb;
+            --card: #fff;
+            --primary: #7c5cff;
+            --accent: #22d3ee;
+            --good: #22c55e;
+            --bad: #ef4444;
+            --warn: #f59e0b;
+            --chip: #f1f5f9;
+            --shadow: 0 4px 20px -8px rgba(15, 23, 42, .1);
+        }
+
+        body.dark {
+            --bg: #0b1020;
+            --panel: #151d3b;
+            --text: #e6ecff;
+            --muted: #8892b0;
+            --border: rgba(255, 255, 255, .08);
+            --card: #151d3b;
+            --chip: #1e2749;
+            --shadow: 0 8px 32px -8px rgba(0, 0, 0, .5);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            transition: background .3s, color .3s
+        }
+
+        .layout {
+            display: grid;
+            grid-template-columns: 240px 1fr;
+            min-height: 100vh
+        }
+
+        /* Sidebar */
+        .sidebar {
+            background: var(--panel);
+            border-right: 1px solid var(--border);
+            padding: 24px 16px;
+            position: sticky;
+            top: 0;
+            height: 100vh
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 700;
+            font-size: 18px;
+            padding: 0 8px 24px;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 16px
+        }
+
+        .brand-mark {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            display: grid;
+            place-items: center;
+            color: #fff;
+            font-size: 16px
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 11px 12px;
+            border-radius: 10px;
+            color: var(--muted);
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all .15s;
+            margin-bottom: 4px
+        }
+
+        .nav-item:hover {
+            background: var(--chip);
+            color: var(--text)
+        }
+
+        .nav-item.active {
+            background: linear-gradient(135deg, rgba(124, 92, 255, .15), rgba(34, 211, 238, .1));
+            color: var(--primary);
+            font-weight: 600
+        }
+
+        body.dark .nav-item.active {
+            color: #c4b5fd
+        }
+
+        .nav-item .ic {
+            font-size: 18px
+        }
+
+        /* Main */
+        .main {
+            padding: 28px 32px;
+            overflow-x: hidden
+        }
+
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 28px;
+            flex-wrap: wrap;
+            gap: 16px
+        }
+
+        .topbar h1 {
+            font-size: 26px;
+            font-weight: 700;
+            letter-spacing: -.01em
+        }
+
+        .topbar .sub {
+            color: var(--muted);
+            font-size: 14px;
+            margin-top: 4px
+        }
+
+        .top-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px
+        }
+
+        .search {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 9px 14px;
+            color: var(--text);
+            font-size: 14px;
+            width: 220px;
+            outline: none
+        }
+
+        .icon-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            cursor: pointer;
+            display: grid;
+            place-items: center;
+            color: var(--text);
+            font-size: 18px;
+            transition: all .15s
+        }
+
+        .icon-btn:hover {
+            transform: translateY(-1px);
+            border-color: var(--primary)
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            display: grid;
+            place-items: center;
+            color: #fff;
+            font-weight: 700
+        }
+
+        /* Stats */
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px
+        }
+
+        .stat {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: var(--shadow);
+            position: relative;
+            overflow: hidden
+        }
+
+        .stat-label {
+            color: var(--muted);
+            font-size: 13px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: .05em
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            margin: 8px 0 6px;
+            letter-spacing: -.02em
+        }
+
+        .stat-edit-btn {
+            position: absolute;
+            right: 20px;
+            bottom: 18px;
+            border: 0;
+            background: transparent;
+            color: var(--muted);
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 4px 0
+        }
+
+        .stat-edit-btn:hover {
+            color: var(--primary)
+        }
+
+        .stat-editor {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+            margin: 7px 0 6px
+        }
+
+        .stat-editor input {
+            width: 145px;
+            max-width: 100%;
+            min-height: 36px;
+            border: 1px solid var(--primary);
+            border-radius: 8px;
+            background: var(--panel);
+            color: var(--text);
+            padding: 6px 9px;
+            font: inherit;
+            font-size: 20px;
+            font-weight: 700;
+            outline: none
+        }
+
+        .stat-editor button {
+            min-height: 32px;
+            padding: 0 9px;
+            border: 0;
+            border-radius: 7px;
+            background: var(--primary);
+            color: #fff;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 700
+        }
+
+        .stat-editor button.cancel {
+            background: var(--chip);
+            color: var(--text)
+        }
+
+        .stat-delta {
+            font-size: 13px;
+            font-weight: 600
+        }
+
+        .stat-delta.up {
+            color: var(--good)
+        }
+
+        .stat-delta.down {
+            color: var(--bad)
+        }
+
+        .stat-icon {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            display: grid;
+            place-items: center;
+            font-size: 20px
+        }
+
+        .bg-a {
+            background: rgba(124, 92, 255, .15)
+        }
+
+        .bg-b {
+            background: rgba(34, 211, 238, .15)
+        }
+
+        .bg-c {
+            background: rgba(34, 197, 94, .15)
+        }
+
+        .bg-d {
+            background: rgba(245, 158, 11, .15)
+        }
+
+        /* Charts row */
+        .row {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 16px;
+            margin-bottom: 24px
+        }
+
+        @media(max-width:1000px) {
+            .row {
+                grid-template-columns: 1fr
+            }
+        }
+
+        .panel-box {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 22px;
+            box-shadow: var(--shadow)
+        }
+
+        .transaction-panel {
+            margin-bottom: 24px
+        }
+
+        .transaction-form {
+            display: grid;
+            grid-template-columns: 1.4fr .8fr .9fr .9fr .65fr auto;
+            gap: 12px;
+            align-items: end
+        }
+
+        .form-field {
+            display: flex;
+            flex-direction: column;
+            gap: 6px
+        }
+
+        .form-field label {
+            color: var(--muted);
+            font-size: 12px;
+            font-weight: 600
+        }
+
+        .form-field input,
+        .form-field select {
+            width: 100%;
+            min-height: 40px;
+            border: 1px solid var(--border);
+            border-radius: 9px;
+            background: var(--panel);
+            color: var(--text);
+            padding: 9px 11px;
+            font: inherit;
+            outline: none
+        }
+
+        .form-field input:focus,
+        .form-field select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(124, 92, 255, .12)
+        }
+
+        .type-toggle {
+            display: flex;
+            gap: 6px
+        }
+
+        .type-toggle .chip {
+            min-height: 40px;
+            flex: 1
+        }
+
+        .primary-btn {
+            min-height: 40px;
+            border: 0;
+            border-radius: 9px;
+            padding: 0 16px;
+            background: linear-gradient(135deg, var(--primary), #5e44e8);
+            color: #fff;
+            font: inherit;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform .15s, box-shadow .15s
+        }
+
+        .primary-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(124, 92, 255, .28)
+        }
+
+        .secondary-btn {
+            min-height: 40px;
+            border: 1px solid var(--border);
+            border-radius: 9px;
+            padding: 0 14px;
+            background: var(--chip);
+            color: var(--text);
+            font: inherit;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 8px
+        }
+
+        .form-error {
+            color: var(--bad);
+            font-size: 12px;
+            margin-top: 10px
+        }
+
+        .delete-btn {
+            width: 28px;
+            height: 28px;
+            border: 0;
+            border-radius: 7px;
+            background: transparent;
+            color: var(--muted);
+            cursor: pointer;
+            font-size: 16px
+        }
+
+        .delete-btn:hover {
+            background: rgba(239, 68, 68, .12);
+            color: var(--bad)
+        }
+
+        .history-actions {
+            display: flex;
+            gap: 3px;
+            align-items: center
+        }
+
+        .edit-btn {
+            width: 28px;
+            height: 28px;
+            border: 0;
+            border-radius: 7px;
+            background: transparent;
+            color: var(--muted);
+            cursor: pointer;
+            font-size: 14px
+        }
+
+        .edit-btn:hover {
+            background: rgba(124, 92, 255, .12);
+            color: var(--primary)
+        }
+
+        @media(max-width:1100px) {
+            .transaction-form {
+                grid-template-columns: repeat(3, 1fr)
+            }
+        }
+
+        @media(max-width:600px) {
+            .transaction-form {
+                grid-template-columns: 1fr
+            }
+
+            .history-item {
+                grid-template-columns: 40px 1fr auto;
+                gap: 9px
+            }
+
+            .history-item .h-cat {
+                grid-column: 2
+            }
+
+            .history-item .h-amt {
+                grid-column: 3;
+                grid-row: 1
+            }
+
+            .history-item .history-actions {
+                grid-column: 2 / span 2
+            }
+        }
+
+        .panel-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 18px
+        }
+
+        .panel-head h3 {
+            font-size: 16px;
+            font-weight: 700
+        }
+
+        .chip {
+            background: var(--chip);
+            color: var(--text);
+            border: none;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer
+        }
+
+        .chip.active {
+            background: var(--primary);
+            color: #fff
+        }
+
+        /* Bar chart */
+        .bars {
+            display: flex;
+            align-items: flex-end;
+            gap: 14px;
+            height: 220px;
+            padding: 10px 0 0
+        }
+
+        .bar-col {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            height: 100%
+        }
+
+        .bar-stack {
+            width: 100%;
+            max-width: 36px;
+            display: flex;
+            flex-direction: column-reverse;
+            height: 100%;
+            border-radius: 8px;
+            overflow: hidden;
+            background: var(--chip)
+        }
+
+        .bar-seg {
+            width: 100%;
+            transition: opacity .2s
+        }
+
+        .bar-seg:hover {
+            opacity: .75
+        }
+
+        .bar-label {
+            font-size: 12px;
+            color: var(--muted);
+            font-weight: 500
+        }
+
+        .legend {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            margin-top: 14px;
+            font-size: 12px;
+            color: var(--muted)
+        }
+
+        .legend span {
+            display: flex;
+            align-items: center;
+            gap: 6px
+        }
+
+        .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 3px
+        }
+
+        /* Donut */
+        .donut-wrap {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 24px;
+            flex-wrap: wrap
+        }
+
+        .donut {
+            width: 180px;
+            height: 180px;
+            position: relative
+        }
+
+        .donut-center {
+            position: absolute;
+            inset: 0;
+            display: grid;
+            place-items: center;
+            text-align: center
+        }
+
+        .donut-center .big {
+            font-size: 22px;
+            font-weight: 700
+        }
+
+        .donut-center .small {
+            font-size: 11px;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: .05em
+        }
+
+        .donut-legend {
+            flex: 1;
+            min-width: 140px
+        }
+
+        .donut-legend .row-l {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            font-size: 13px;
+            border-bottom: 1px dashed var(--border)
+        }
+
+        .donut-legend .row-l:last-child {
+            border-bottom: none
+        }
+
+        /* Line chart */
+        .line-chart {
+            width: 100%;
+            height: 200px
+        }
+
+        /* Expense history */
+        .history-item {
+            display: grid;
+            grid-template-columns: 44px 1fr auto auto auto;
+            gap: 14px;
+            align-items: center;
+            padding: 14px 0;
+            border-bottom: 1px solid var(--border)
+        }
+
+        .history-item:last-child {
+            border-bottom: none
+        }
+
+        .h-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            display: grid;
+            place-items: center;
+            font-size: 20px;
+            background: var(--chip)
+        }
+
+        .h-title {
+            font-weight: 600;
+            font-size: 14px
+        }
+
+        .h-sub {
+            color: var(--muted);
+            font-size: 12px;
+            margin-top: 2px
+        }
+
+        .h-cat {
+            font-size: 12px;
+            background: var(--chip);
+            padding: 4px 10px;
+            border-radius: 999px;
+            color: var(--muted);
+            font-weight: 500
+        }
+
+        .h-amt {
+            font-weight: 700;
+            font-size: 15px
+        }
+
+        .h-amt.neg {
+            color: var(--bad)
+        }
+
+        .h-amt.pos {
+            color: var(--good)
+        }
+
+        @media(max-width:768px) {
+            .layout {
+                grid-template-columns: 1fr
+            }
+
+            .sidebar {
+                position: fixed;
+                left: -260px;
+                z-index: 100;
+                transition: left .3s;
+                width: 240px
+            }
+
+            .sidebar.open {
+                left: 0
+            }
+
+            .main {
+                padding: 20px
+            }
+
+            .search {
+                display: none
+            }
+        }
+    </style>
+</head>
+
+<body ng-controller="DashCtrl" ng-class="{dark:dark}">
+    <div class="layout">
+        <aside class="sidebar" ng-class="{open:menuOpen}">
+            <div class="brand">
+                <div class="brand-mark">₿</div>FinWise
+            </div>
+            <div class="nav-item" ng-repeat="n in nav" ng-class="{active:n.id===active}" ng-click="active=n.id">
+                <span class="ic">{{n.icon}}</span><span>{{n.label}}</span>
+            </div>
+        </aside>
+
+        <main class="main">
+            <div class="topbar">
+                <div>
+                    <h1>{{greeting()}}, User 👋</h1>
+                    <div class="sub">Here's what's happening with your money today.</div>
+                </div>
+                <div class="top-actions">
+                    <input class="search" placeholder="Search transactions…" ng-model="query" />
+                    <button class="primary-btn" ng-click="openForm('income')">+ Add income</button>
+                    <button class="secondary-btn" ng-click="openForm('expense')">+ Add expense</button>
+                    <button class="icon-btn" ng-click="dark=!dark" title="Toggle dark mode">{{dark?'☀️':'🌙'}}</button>
+                    <button class="icon-btn" title="Notifications">🔔</button>
+                    <div class="avatar">A</div>
+                </div>
+            </div>
+
+            <!-- Stats -->
+            <div class="stats">
+                <div class="stat" ng-repeat="s in stats">
+                    <div class="stat-icon" ng-class="s.bg">{{s.icon}}</div>
+                    <div class="stat-label">{{s.label}}</div>
+                    <div class="stat-editor" ng-if="s.editing">
+                        <input type="number" min="0" step="0.01" ng-model="s.editingValue"
+                            aria-label="Edit {{s.label}}" />
+                        <button type="button" ng-click="saveStat(s)">Save</button>
+                        <button type="button" class="cancel" ng-click="cancelStatEdit(s)">Cancel</button>
+                    </div>
+                    <div class="stat-value" ng-if="!s.editing">{{s.value | inr}}</div>
+                    <div class="stat-delta" ng-class="s.up?'up':'down'">{{s.up?'▲':'▼'}} {{s.delta}} vs last month</div>
+                    <button type="button" class="stat-edit-btn" ng-if="!s.editing" ng-click="startStatEdit(s)">Edit
+                        amount</button>
+                </div>
+            </div>
+
+            <div class="panel-box transaction-panel" ng-if="showForm">
+                <div class="panel-head">
+                    <div>
+                        <h3>{{editingTransaction ? 'Edit history entry' : 'Add to your finances'}}</h3>
+                        <div class="sub" style="color:var(--muted);font-size:12px;margin-top:4px">{{editingTransaction ?
+                            'Update the details below and save your changes.' : 'Your entry will appear in Expense
+                            History.'}}</div>
+                    </div>
+                    <button class="secondary-btn" ng-click="closeForm()">Close</button>
+                </div>
+                <form class="transaction-form" ng-submit="saveTransaction()">
+                    <div class="form-field">
+                        <label for="transaction-title">Description</label>
+                        <input id="transaction-title" type="text" ng-model="form.title"
+                            placeholder="e.g. Freelance payment" required />
+                    </div>
+                    <div class="form-field">
+                        <label for="transaction-amount">Amount</label>
+                        <input id="transaction-amount" type="number" min="0.01" step="0.01" ng-model="form.amount"
+                            placeholder="0.00" required />
+                    </div>
+                    <div class="form-field">
+                        <label>Type</label>
+                        <div class="type-toggle">
+                            <button type="button" class="chip" ng-class="{active:form.type==='income'}"
+                                ng-click="form.type='income'">Income</button>
+                            <button type="button" class="chip" ng-class="{active:form.type==='expense'}"
+                                ng-click="form.type='expense'">Expense</button>
+                        </div>
+                    </div>
+                    <div class="form-field">
+                        <label for="transaction-category">Category</label>
+                        <select id="transaction-category" ng-model="form.cat">
+                            <option ng-repeat="cat in categoryOptions" value="{{cat}}">{{cat}}</option>
+                        </select>
+                    </div>
+                    <div class="form-field">
+                        <label for="transaction-date">Date</label>
+                        <input id="transaction-date" type="date" ng-model="form.date" required />
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="primary-btn">{{editingTransaction ? 'Save changes' : 'Save
+                            entry'}}</button>
+                    </div>
+                </form>
+                <div class="form-error" ng-if="formError">{{formError}}</div>
+            </div>
+
+            <!-- Charts row 1 -->
+            <div class="row">
+                <div class="panel-box">
+                    <div class="panel-head">
+                        <div>
+                            <h3>Spending Overview</h3>
+                            <div class="sub" style="color:var(--muted);font-size:12px;margin-top:4px">Monthly breakdown
+                                by category</div>
+                        </div>
+                        <div style="display:flex;gap:6px">
+                            <button class="chip" ng-class="{active:range==='6M'}" ng-click="range='6M'">6M</button>
+                            <button class="chip" ng-class="{active:range==='1Y'}" ng-click="range='1Y'">1Y</button>
+                        </div>
+                    </div>
+                    <div class="bars">
+                        <div class="bar-col" ng-repeat="m in months">
+                            <div class="bar-stack">
+                                <div class="bar-seg" style="background:#7c5cff" ng-style="{height:m.bills+'%'}"></div>
+                                <div class="bar-seg" style="background:#22d3ee" ng-style="{height:m.needs+'%'}"></div>
+                                <div class="bar-seg" style="background:#22c55e" ng-style="{height:m.wants+'%'}"></div>
+                            </div>
+                            <div class="bar-label">{{m.name}}</div>
+                        </div>
+                    </div>
+                    <div class="legend">
+                        <span><span class="dot" style="background:#7c5cff"></span>Bills</span>
+                        <span><span class="dot" style="background:#22d3ee"></span>Needs</span>
+                        <span><span class="dot" style="background:#22c55e"></span>Wants</span>
+                    </div>
+                </div>
+
+                <div class="panel-box">
+                    <div class="panel-head">
+                        <h3>Category Split</h3>
+                    </div>
+                    <div class="donut-wrap">
+                        <div class="donut">
+                            <svg viewBox="0 0 42 42" width="180" height="180" style="transform:rotate(-90deg)">
+                                <circle cx="21" cy="21" r="15.915" fill="transparent" stroke="var(--chip)"
+                                    stroke-width="6"></circle>
+                                <circle ng-repeat="c in categories" cx="21" cy="21" r="15.915" fill="transparent"
+                                    ng-attr-stroke="{{c.color}}" stroke-width="6"
+                                    ng-attr-stroke-dasharray="{{c.pct}} {{100-c.pct}}"
+                                    ng-attr-stroke-dashoffset="{{c.offset}}"></circle>
+                            </svg>
+                            <div class="donut-center">
+                                <div>
+                                    <div class="big">{{totalExpenses | inr}}</div>
+                                    <div class="small">This month</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="donut-legend">
+                            <div class="row-l" ng-repeat="c in categories">
+                                <span style="display:flex;align-items:center;gap:8px"><span class="dot"
+                                        ng-style="{background:c.color}"></span>{{c.name}}</span>
+                                <strong>{{c.pct}}%</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts row 2: line + history -->
+            <div class="row">
+                <div class="panel-box">
+                    <div class="panel-head">
+                        <div>
+                            <h3>Cash Flow Trend</h3>
+                            <div style="color:var(--muted);font-size:12px;margin-top:4px">Income vs. expenses over the
+                                last 12 weeks</div>
+                        </div>
+                    </div>
+                    <svg class="line-chart" viewBox="0 0 600 200" preserveAspectRatio="none">
+                        <defs>
+                            <linearGradient id="gradIncome" x1="0" x2="0" y1="0" y2="1">
+                                <stop offset="0%" stop-color="#22c55e" stop-opacity=".35" />
+                                <stop offset="100%" stop-color="#22c55e" stop-opacity="0" />
+                            </linearGradient>
+                            <linearGradient id="gradExp" x1="0" x2="0" y1="0" y2="1">
+                                <stop offset="0%" stop-color="#7c5cff" stop-opacity=".35" />
+                                <stop offset="100%" stop-color="#7c5cff" stop-opacity="0" />
+                            </linearGradient>
+                        </defs>
+                        <path ng-attr-d="{{incomeArea}}" fill="url(#gradIncome)" />
+                        <path ng-attr-d="{{incomePath}}" fill="none" stroke="#22c55e" stroke-width="2.5"
+                            stroke-linecap="round" />
+                        <path ng-attr-d="{{expArea}}" fill="url(#gradExp)" />
+                        <path ng-attr-d="{{expPath}}" fill="none" stroke="#7c5cff" stroke-width="2.5"
+                            stroke-linecap="round" />
+                    </svg>
+                    <div class="legend">
+                        <span><span class="dot" style="background:#22c55e"></span>Income</span>
+                        <span><span class="dot" style="background:#7c5cff"></span>Expenses</span>
+                    </div>
+                </div>
+
+                <div class="panel-box">
+                    <div class="panel-head">
+                        <h3>Expense History</h3>
+                        <div style="display:flex;gap:6px">
+                            <button class="chip" ng-click="openForm('income')">+ Income</button>
+                            <button class="chip active" ng-click="openForm('expense')">+ Expense</button>
+                        </div>
+                    </div>
+                    <div class="history-item" ng-repeat="e in expenses | filter:query">
+                        <div class="h-icon">{{e.icon}}</div>
+                        <div>
+                            <div class="h-title">{{e.title}}</div>
+                            <div class="h-sub">{{e.date}}</div>
+                        </div>
+                        <div class="h-cat">{{e.cat}}</div>
+                        <div class="h-amt" ng-class="e.amount>0?'pos':'neg'">{{e.amount | inrSigned}}</div>
+                        <div class="history-actions">
+                            <button class="edit-btn" ng-click="editTransaction(e)" title="Edit entry">✎</button>
+                            <button class="delete-btn" ng-click="removeTransaction(e)" title="Remove entry">×</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        angular.module('dashApp', [])
+            .filter('inr', function () {
+                return function (value) {
+                    var amount = Number(value) || 0;
+                    return new Intl.NumberFormat('en-IN', {
+                        style: 'currency',
+                        currency: 'INR',
+                        minimumFractionDigits: 0,
+                        maximumFractionDigits: 2
+                    }).format(amount);
+                };
+            })
+            .filter('inrSigned', function () {
+                return function (value) {
+                    var amount = Number(value) || 0;
+                    var sign = amount > 0 ? '+' : amount < 0 ? '-' : '';
+                    return sign + new Intl.NumberFormat('en-IN', {
+                        style: 'currency',
+                        currency: 'INR',
+                        minimumFractionDigits: 0,
+                        maximumFractionDigits: 2
+                    }).format(Math.abs(amount));
+                };
+            })
+            .controller('DashCtrl', function ($scope) {
+                $scope.dark = true;
+                $scope.active = 'dashboard';
+                $scope.range = '6M';
+                $scope.categoryOptions = ['Bills', 'Needs', 'Wants', 'Savings', 'Income', 'Other'];
+                $scope.showForm = false;
+                $scope.formError = '';
+                $scope.form = {};
+                $scope.nav = [
+                    { id: 'dashboard', label: 'Dashboard', icon: '📊' },
+
+                ];
+                $scope.greeting = function () { var h = new Date().getHours(); return h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening' };
+                $scope.stats = [
+                    { label: 'Total Balance', value: 12480, delta: '8.2%', up: true, icon: '💰', bg: 'bg-a' },
+                    { label: 'Income', value: 5200, delta: '3.1%', up: true, icon: '📥', bg: 'bg-c' },
+                    { label: 'Total Expense', value: 3240, delta: '4.7%', up: false, icon: '📤', bg: 'bg-d' },
+                    { label: 'Savings', value: 1960, delta: '12.4%', up: true, icon: '🏦', bg: 'bg-b' }
+                ];
+                try {
+                    var savedStats = JSON.parse(localStorage.getItem('finwise-stats') || '{}');
+                    $scope.stats.forEach(function (stat) {
+                        if (typeof savedStats[stat.label] === 'number') {
+                            stat.value = savedStats[stat.label];
+                        }
+                    });
+                } catch (error) {
+                    // Use the starting values if saved dashboard values are unavailable.
+                }
+                $scope.months = [
+                    { name: 'Feb', bills: 22, needs: 18, wants: 10 },
+                    { name: 'Mar', bills: 28, needs: 15, wants: 14 },
+                    { name: 'Apr', bills: 20, needs: 22, wants: 12 },
+                    { name: 'May', bills: 32, needs: 18, wants: 20 },
+                    { name: 'Jun', bills: 26, needs: 24, wants: 16 },
+                    { name: 'Jul', bills: 30, needs: 20, wants: 22 }
+                ];
+                // Donut
+                var cats = [
+                    { name: 'Bills', pct: 38, color: '#7c5cff' },
+                    { name: 'Needs', pct: 28, color: '#22d3ee' },
+                    { name: 'Wants', pct: 20, color: '#22c55e' },
+                    { name: 'Savings', pct: 14, color: '#f59e0b' }
+                ];
+                var off = 25;
+                cats.forEach(function (c) { c.offset = off; off = (off - c.pct + 100) % 100 });
+                $scope.categories = cats;
+
+                // Line chart paths
+                function build(vals) {
+                    var w = 600, h = 200, step = w / (vals.length - 1), max = Math.max.apply(null, vals), min = 0;
+                    var pts = vals.map(function (v, i) { var x = i * step; var y = h - ((v - min) / (max - min)) * (h - 20) - 10; return [x, y] });
+                    var d = pts.map(function (p, i) { return (i === 0 ? 'M' : 'L') + p[0].toFixed(1) + ',' + p[1].toFixed(1) }).join(' ');
+                    var area = d + ' L' + w + ',' + h + ' L0,' + h + ' Z';
+                    return { line: d, area: area };
+                }
+                var inc = build([3800, 4100, 3900, 4400, 4200, 4700, 4500, 5000, 4800, 5100, 5000, 5200]);
+                var exp = build([2800, 3100, 2900, 3300, 3000, 3400, 3200, 3500, 3400, 3600, 3300, 3240]);
+                $scope.incomePath = inc.line; $scope.incomeArea = inc.area;
+                $scope.expPath = exp.line; $scope.expArea = exp.area;
+
+                var defaultTransactions = [
+                    { icon: '🏠', title: 'Rent/Mortgage', cat: 'Bills', date: 'Jul 01, 2026', amount: -1200 },
+                    { icon: '⚡', title: 'Utilities', cat: 'Bills', date: 'Jul 05, 2026', amount: -140 },
+                    { icon: '🛒', title: 'Groceries', cat: 'Needs', date: 'Jul 08, 2026', amount: -320 },
+                    { icon: '🚕', title: 'Transportation', cat: 'Needs', date: 'Jul 10, 2026', amount: -85 },
+                    { icon: '🍿', title: 'Entertainment', cat: 'Wants', date: 'Jul 12, 2026', amount: -42 },
+                    { icon: '💼', title: 'Salary', cat: 'Income', date: 'Jul 15, 2026', amount: 5200 },
+                    { icon: '🥡', title: 'Dining out', cat: 'Wants', date: 'Jul 18, 2026', amount: -68 },
+                    { icon: '🩺', title: 'Medical', cat: 'Needs', date: 'Jul 20, 2026', amount: -120 }
+                ];
+                var savedTransactions = null;
+                try {
+                    savedTransactions = JSON.parse(localStorage.getItem('finwise-history'));
+                } catch (error) {
+                    savedTransactions = null;
+                }
+
+                if (!Array.isArray(savedTransactions)) {
+                    savedTransactions = defaultTransactions;
+                    try {
+                        var olderTransactions = JSON.parse(localStorage.getItem('finwise-transactions') || '[]');
+                        if (Array.isArray(olderTransactions)) {
+                            savedTransactions = savedTransactions.concat(olderTransactions);
+                        }
+                    } catch (error) {
+                        // Keep the default history if older saved entries are unavailable.
+                    }
+                }
+                $scope.expenses = savedTransactions;
+
+                function formatDate(dateValue) {
+                    var date = dateValue instanceof Date ? dateValue : new Date(dateValue + 'T00:00:00');
+                    return date.toLocaleDateString(undefined, { month: 'short', day: '2-digit', year: 'numeric' });
+                }
+
+                function saveTransactions() {
+                    localStorage.setItem('finwise-history', JSON.stringify($scope.expenses));
+                }
+
+                function saveStats() {
+                    var values = {};
+                    $scope.stats.forEach(function (stat) {
+                        values[stat.label] = Number(stat.value) || 0;
+                    });
+                    localStorage.setItem('finwise-stats', JSON.stringify(values));
+                    $scope.totalIncome = $scope.stats[1].value;
+                    $scope.totalExpenses = $scope.stats[2].value;
+                }
+
+                $scope.startStatEdit = function (stat) {
+                    stat.editingValue = stat.value;
+                    stat.editing = true;
+                };
+
+                $scope.cancelStatEdit = function (stat) {
+                    stat.editing = false;
+                    stat.editingValue = null;
+                };
+
+                $scope.saveStat = function (stat) {
+                    var value = Number(stat.editingValue);
+                    if (!isFinite(value) || value < 0) {
+                        return;
+                    }
+                    stat.value = Math.round(value * 100) / 100;
+                    $scope.cancelStatEdit(stat);
+                    saveStats();
+                };
+
+                function adjustStatsForTransaction(amount, direction) {
+                    var value = Number(amount) || 0;
+                    var change = value * direction;
+                    $scope.stats[0].value += change;
+                    $scope.stats[3].value += change;
+                    if (value >= 0) {
+                        $scope.stats[1].value += change;
+                    } else {
+                        $scope.stats[2].value -= change;
+                    }
+                    saveStats();
+                }
+
+                $scope.openForm = function (type) {
+                    var today = new Date();
+                    $scope.editingTransaction = null;
+                    $scope.form = {
+                        type: type || 'expense',
+                        title: '',
+                        amount: null,
+                        cat: type === 'income' ? 'Income' : 'Needs',
+                        date: today
+                    };
+                    $scope.formError = '';
+                    $scope.showForm = true;
+                };
+
+                $scope.closeForm = function () {
+                    $scope.showForm = false;
+                    $scope.editingTransaction = null;
+                    $scope.formError = '';
+                };
+
+                $scope.editTransaction = function (transaction) {
+                    var parsedDate = new Date(transaction.date);
+                    $scope.editingTransaction = transaction;
+                    $scope.form = {
+                        type: transaction.amount >= 0 ? 'income' : 'expense',
+                        title: transaction.title,
+                        amount: Math.abs(transaction.amount),
+                        cat: transaction.cat,
+                        date: isNaN(parsedDate.getTime()) ? new Date() : parsedDate
+                    };
+                    $scope.formError = '';
+                    $scope.showForm = true;
+                };
+
+                $scope.saveTransaction = function () {
+                    var amount = Number($scope.form.amount);
+                    if (!$scope.form.title || !amount || amount <= 0 || !$scope.form.date) {
+                        $scope.formError = 'Please enter a description, a valid amount, and a date.';
+                        return;
+                    }
+
+                    var isIncome = $scope.form.type === 'income';
+                    var newAmount = isIncome ? amount : -amount;
+                    if ($scope.editingTransaction) {
+                        var oldAmount = $scope.editingTransaction.amount;
+                        $scope.editingTransaction.icon = isIncome ? '📥' : '💳';
+                        $scope.editingTransaction.title = $scope.form.title.trim();
+                        $scope.editingTransaction.cat = isIncome ? 'Income' : $scope.form.cat;
+                        $scope.editingTransaction.date = formatDate($scope.form.date);
+                        $scope.editingTransaction.amount = newAmount;
+                        adjustStatsForTransaction(oldAmount, -1);
+                        adjustStatsForTransaction(newAmount, 1);
+                    } else {
+                        $scope.expenses.unshift({
+                            icon: isIncome ? '📥' : '💳',
+                            title: $scope.form.title.trim(),
+                            cat: isIncome ? 'Income' : $scope.form.cat,
+                            date: formatDate($scope.form.date),
+                            amount: newAmount
+                        });
+                        adjustStatsForTransaction(newAmount, 1);
+                    }
+                    saveTransactions();
+                    $scope.closeForm();
+                };
+
+                $scope.removeTransaction = function (transaction) {
+                    var index = $scope.expenses.indexOf(transaction);
+                    if (index !== -1) {
+                        $scope.expenses.splice(index, 1);
+                        adjustStatsForTransaction(transaction.amount, -1);
+                        saveTransactions();
+                    }
+                };
+
+                saveStats();
+            });
+    </script>
+</body>
+
+</html>
